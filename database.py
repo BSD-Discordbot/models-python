@@ -3,7 +3,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import re
-import os
 
 url_tokens = {
         "DB_USER": os.getenv("DB_USER", ""),
