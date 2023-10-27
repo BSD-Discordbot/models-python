@@ -1,5 +1,6 @@
 from typing import BinaryIO, List
 from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
 
 from . import models, schemas
 
@@ -66,6 +67,13 @@ def get_all_players(db: Session):
 
 def get_player(db: Session, player_id: str):
     return db.query(models.Player).filter(models.Player.discord_id == player_id).first()
+
+def create_player(db: Session, player_id: str):
+    player = models.Player(discord_id=player_id, balance=0, daily_streak=0, last_daily=datetime.now() - timedelta(1))
+    db.add(player)
+    db.commit()
+    db.refresh(player)
+    return player
 
 def get_all_events(db: Session):
     return db.query(models.Event).all()
