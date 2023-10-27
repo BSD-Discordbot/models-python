@@ -61,10 +61,9 @@ class Player(Base):
 class CardOwnership(Base):
     __tablename__ = "player_has_cards"
     player_id: Mapped[str] = mapped_column(ForeignKey('player.discord_id'), primary_key=True, index=True)
-    player: Mapped[Player] = relationship(backref='ownership')
+    player: Mapped[Player] = relationship(back_populates='card_ownership')
     card_id: Mapped[int] = mapped_column(ForeignKey("card.id"), primary_key=True)
-    card: Mapped[Card] = relationship(backref='ownership')
-    cards: Mapped[Card] = relationship()
+    # card: Mapped[Card] = relationship(backref='ownership')
     amount: Mapped[int] = mapped_column(nullable=False, default=0)
     
 class CardUpgrade(Base):
@@ -92,4 +91,4 @@ class Event(Base):
         return list(map(lambda t: t.id, object_session(self).query(Card).with_parent(self).add_column(column=Card.name)))
 
 
-Player.cards = association_proxy('ownership', 'player')
+# Player.cards = association_proxy('card_ownership', 'player')
