@@ -5,19 +5,13 @@ from sqlalchemy import Table
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship, object_session
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.ext.associationproxy import AssociationProxy
 import datetime
 from typing import List
 from typing import Optional
 
 from .database import Base
-
-player_has_cards = Table(
-    "player_has_cards",
-    Base.metadata,
-    Column("player", ForeignKey("player.discord_id", ondelete="CASCADE"), primary_key=True),
-    Column("card", ForeignKey("card.id", ondelete="CASCADE"), primary_key=True),
-    Column("amount", Integer, primary_key=True),
-)
 
 card_has_tags = Table(
     "card_has_tags",
@@ -62,8 +56,17 @@ class Player(Base):
     balance: Mapped[int] = mapped_column(default=0)
     last_daily: Mapped[datetime.datetime] = mapped_column(DateTime)
     daily_streak: Mapped[int] = mapped_column(Integer, default=0)
-    cards: Mapped[List[Card]] = relationship(secondary=player_has_cards)
+    card_ownership: Mapped[List['CardOwnership']] = relationship(back_populates='player')
 
+class CardOwnership(Base):
+    __tablename__ = "player_has_cards"
+    player_id: Mapped[str] = mapped_column(ForeignKey('player.discord_id'), primary_key=True, index=True)
+    player: Mapped[Player] = relationship(backref='ownership')
+    card_id: Mapped[int] = mapped_column(ForeignKey("card.id"), primary_key=True)
+    card: Mapped[Card] = relationship(backref='ownership')
+    cards: Mapped[Card] = relationship()
+    amount: Mapped[int] = mapped_column(nullable=False, default=0)
+    
 class CardUpgrade(Base):
     __tablename__ = "card_upgrade"
     card_id: Mapped[int] = mapped_column(ForeignKey("card.id"), primary_key=True, index=True)
@@ -87,3 +90,6 @@ class Event(Base):
     @property
     def cards_names(self):
         return list(map(lambda t: t.id, object_session(self).query(Card).with_parent(self).add_column(column=Card.name)))
+
+
+Player.cards = association_proxy('ownership', 'player')
