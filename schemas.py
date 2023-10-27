@@ -10,8 +10,12 @@ class PlayerList(PlayerBase):
     last_daily: datetime
     daily_streak: int
 
+class CardOwnership(BaseModel):
+    card_id: int
+    amount: int
+
 class Player(PlayerList):
-    cards: List['Card'] = []
+    card_ownership: List['CardOwnership'] = []
 
     class Config:
         from_attributes = True
